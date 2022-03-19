@@ -16,14 +16,15 @@ def rgb_to_hex(r, g, b):
 
 def add():
     global image, height, width, pixel_arr
-    path = askopenfilename(filetypes=[('Image Files', '*.jpeg')])
+    path = askopenfilename(filetypes=[('Image Files', ['*.jpeg', '*.png'])])
     if path:
         path_name.set(path)
         image = Image.open(path)
-        fh = 350
-        hp = (fh/float(image.size[1]))
-        ws = int((float(image.size[0])*float(hp)))
-        image = image.resize((ws, fh), Image.NEAREST)
+        if image.size[1] > 350:
+            fh = 350
+            hp = (fh/float(image.size[1]))
+            ws = int((float(image.size[0])*float(hp)))
+            image = image.resize((ws, fh), Image.NEAREST)
         width, height = image.size
         pixel_arr = list(image.getdata())
         generate_btn.grid(row=0, column=0, pady=10, ipady=5, sticky=EW, padx=5)
@@ -38,7 +39,10 @@ def clear():
 def generate():
     global image, height, width, pixel_arr
     clear()
-    data = np.array(pixel_arr).reshape((height, width, 3))
+    try:
+        data = np.array(pixel_arr).reshape((height, width, 3))
+    except:
+        data = np.array(pixel_arr).reshape((height, width, 4))
     f = open('source.py', 'a')
     f.write(f'from tkinter import *\nroot = Tk()\nc = Canvas(root, height={height}, width={width})\nc.pack()\n')
     for i in range(height):

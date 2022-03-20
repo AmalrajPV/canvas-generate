@@ -4,6 +4,8 @@ import numpy as np
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
 
+import pyperclip
+
 
 image = None
 height = width = 0
@@ -48,17 +50,31 @@ def generate():
     except:
         data = np.array(pixel_arr).reshape((height, width, 4))
     f = open('source.py', 'a')
-    f.write(f'from tkinter import *\nroot = Tk()\nc = Canvas(root, height={height}, width={width})\nc.pack()\n')
+    f.write(f'from tkinter import *\nroot = Tk()\nc = Canvas(root, height={height}, width={width}, background="black")\nc.pack()\n')
     for i in range(0, height, quality):
         for j in range(0, width, quality):
-                    f.write(f'c.create_rectangle({j}, {i}, {j+quality}, {i+quality}, fill="{rgb_to_hex(data[i][j][0], data[i][j][1], data[i][j][2])}", outline="")\n')
+            if len(data[i][j]) == 4:
+                if data[i][j][3] == 0:
+                    continue
+            f.write(f'c.create_rectangle({j}, {i}, {j+quality}, {i+quality}, fill="{rgb_to_hex(data[i][j][0], data[i][j][1], data[i][j][2])}", outline="")\n')
     f.write('root.mainloop()')
     f.close()
+    cbtn.grid(row=4, column=0)
     messagebox.showinfo("Success", "Code generate. You can copy it from source.py")
+
+
+def copy_text():
+    global image, height, width, pixel_arr, quality
+    f = open('source.py', 'r')
+    code_line = f.read()
+    f.close()
+    pyperclip.copy(code_line)
+    messagebox.showinfo('Copied', "Code Copied")
     image = None
     height = width = 0
     pixel_arr = []
     path_name.set('')
+
 
 root = Tk()
 root.geometry('500x250')
@@ -99,5 +115,7 @@ quality_in = OptionMenu(fr2, selection, *values)
 qlty = Label(fr2, text="Quality (10-1)", font=("bold", 13))
 
 generate_btn = Button(fr2, text="Generate", bg="grey", command=generate)
+
+cbtn = Button(root, text="Copy Code", command=copy_text)
 
 root.mainloop()

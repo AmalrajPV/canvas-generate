@@ -8,7 +8,7 @@ from tkinter import messagebox
 image = None
 height = width = 0
 pixel_arr = []
-
+quality = 1
 
 def rgb_to_hex(r, g, b):
         return f'#{r:02x}{g:02x}{b:02x}'
@@ -16,7 +16,7 @@ def rgb_to_hex(r, g, b):
 
 def add():
     global image, height, width, pixel_arr
-    path = askopenfilename(filetypes=[('Image Files', ['*.jpeg', '*.png'])])
+    path = askopenfilename(filetypes=[('Image Files', ['*.jpeg', '*.png', '*jpg'])])
     if path:
         path_name.set(path)
         image = Image.open(path)
@@ -27,7 +27,10 @@ def add():
             image = image.resize((ws, fh), Image.NEAREST)
         width, height = image.size
         pixel_arr = list(image.getdata())
-        generate_btn.grid(row=0, column=0, pady=10, ipady=5, sticky=EW, padx=5)
+        generate_btn.grid(row=0, column=2, pady=10, ipady=5, sticky=EW, padx=5)
+        quality_in.grid(row=0, column=1, pady=10, ipady=2, sticky=EW, padx=5)
+        qlty.grid(row=0, column=0, pady=10, ipady=2, sticky=EW)
+
 
 
 def clear():
@@ -37,17 +40,18 @@ def clear():
 
 
 def generate():
-    global image, height, width, pixel_arr
+    global image, height, width, pixel_arr, quality
     clear()
+    quality = 11 - selection.get()
     try:
         data = np.array(pixel_arr).reshape((height, width, 3))
     except:
         data = np.array(pixel_arr).reshape((height, width, 4))
     f = open('source.py', 'a')
     f.write(f'from tkinter import *\nroot = Tk()\nc = Canvas(root, height={height}, width={width})\nc.pack()\n')
-    for i in range(height):
-        for j in range(width):
-                    f.write(f'c.create_rectangle({j}, {i}, {j+1}, {i+1}, fill="{rgb_to_hex(data[i][j][0], data[i][j][1], data[i][j][2])}", outline="")\n')
+    for i in range(0, height, quality):
+        for j in range(0, width, quality):
+                    f.write(f'c.create_rectangle({j}, {i}, {j+quality}, {i+quality}, fill="{rgb_to_hex(data[i][j][0], data[i][j][1], data[i][j][2])}", outline="")\n')
     f.write('root.mainloop()')
     f.close()
     messagebox.showinfo("Success", "Code generate. You can copy it from source.py")
@@ -84,6 +88,15 @@ add_btn.grid(row=0, column=1, sticky=EW, ipady=2, padx=2)
 fr2 = Frame(root)
 fr2.grid(row=3, column=0, sticky=EW)
 fr2.grid_columnconfigure(0, weight=1)
+fr2.grid_columnconfigure(1, weight=2)
+fr2.grid_columnconfigure(2, weight=2)
+
+values = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+selection = IntVar()
+selection.set(values[0])
+quality_in = OptionMenu(fr2, selection, *values)
+
+qlty = Label(fr2, text="Quality (10-1)", font=("bold", 13))
 
 generate_btn = Button(fr2, text="Generate", bg="grey", command=generate)
 
